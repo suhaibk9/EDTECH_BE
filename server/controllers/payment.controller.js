@@ -1,10 +1,10 @@
-import crypto from 'crypto';
+import crypto from "crypto";
 
-import asyncHandler from '../middlewares/asyncHandler.middleware.js';
-import User from '../models/user.model.js';
-import AppError from '../utils/AppError.js';
-import { razorpay } from '../server.js';
-import Payment from '../models/Payment.model.js';
+import asyncHandler from "../middlewares/asyncHandler.middleware.js";
+import Payment from "../models/Payment.model.js";
+import User from "../models/user.model.js";
+import { razorpay } from "../server.js";
+import AppError from "../utils/AppError.js";
 
 /**
  * @ACTIVATE_SUBSCRIPTION
@@ -19,12 +19,12 @@ export const buySubscription = asyncHandler(async (req, res, next) => {
   const user = await User.findById(id);
 
   if (!user) {
-    return next(new AppError('Unauthorized, please login'));
+    return next(new AppError("Unauthorized, please login"));
   }
 
   // Checking the user role
-  if (user.role === 'ADMIN') {
-    return next(new AppError('Admin cannot purchase a subscription', 400));
+  if (user.role === "ADMIN") {
+    return next(new AppError("Admin cannot purchase a subscription", 400));
   }
 
   // Creating a subscription using razorpay that we imported from the server
@@ -43,7 +43,7 @@ export const buySubscription = asyncHandler(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
-    message: 'subscribed successfully',
+    message: "subscribed successfully",
     subscription_id: subscription.id,
   });
 });
@@ -69,13 +69,20 @@ export const verifySubscription = asyncHandler(async (req, res, next) => {
   // razorpay_payment_id is from the frontend and there should be a '|' character between this and subscriptionId
   // At the end convert it to Hex value
   const generatedSignature = crypto
-    .createHmac('sha256', process.env.RAZORPAY_SECRET)
+    .createHmac("sha256", process.env.RAZORPAY_SECRET)
     .update(`${razorpay_payment_id}|${subscriptionId}`)
-    .digest('hex');
+    .digest("hex");
+
+  console.log("Backend Debug - Payment Verification:");
+  console.log("payment_id:", razorpay_payment_id);
+  console.log("subscription_id (DB):", subscriptionId);
+  console.log("razorpay_subscription_id (Body):", razorpay_subscription_id);
+  console.log("generatedSignature:", generatedSignature);
+  console.log("razorpay_signature:", razorpay_signature);
 
   // Check if generated signature and signature received from the frontend is the same or not
   if (generatedSignature !== razorpay_signature) {
-    return next(new AppError('Payment not verified, please try again.', 400));
+    return next(new AppError("Payment not verified, please try again.", 400));
   }
 
   // If they match create payment and store it in the DB
@@ -86,14 +93,14 @@ export const verifySubscription = asyncHandler(async (req, res, next) => {
   });
 
   // Update the user subscription status to active (This will be created before this)
-  user.subscription.status = 'active';
+  user.subscription.status = "active";
 
   // Save the user in the DB with any changes
   await user.save();
 
   res.status(200).json({
     success: true,
-    message: 'Payment verified successfully',
+    message: "Payment verified successfully",
   });
 });
 
@@ -109,9 +116,9 @@ export const cancelSubscription = asyncHandler(async (req, res, next) => {
   const user = await User.findById(id);
 
   // Checking the user role
-  if (user.role === 'ADMIN') {
+  if (user.role === "ADMIN") {
     return next(
-      new AppError('Admin does not need to cannot cancel subscription', 400)
+      new AppError("Admin does not need to cannot cancel subscription", 400),
     );
   }
 
@@ -121,7 +128,7 @@ export const cancelSubscription = asyncHandler(async (req, res, next) => {
   // Creating a subscription using razorpay that we imported from the server
   try {
     const subscription = await razorpay.subscriptions.cancel(
-      subscriptionId // subscription id
+      subscriptionId, // subscription id
     );
 
     // Adding the subscription status to the user account
@@ -149,15 +156,15 @@ export const cancelSubscription = asyncHandler(async (req, res, next) => {
   if (refundPeriod <= timeSinceSubscribed) {
     return next(
       new AppError(
-        'Refund period is over, so there will not be any refunds provided.',
-        400
-      )
+        "Refund period is over, so there will not be any refunds provided.",
+        400,
+      ),
     );
   }
 
   // If refund period is valid then refund the full amount that the user has paid
   await razorpay.payments.refund(payment.razorpay_payment_id, {
-    speed: 'optimum', // This is required
+    speed: "optimum", // This is required
   });
 
   user.subscription.id = undefined; // Remove the subscription ID from user DB
@@ -169,7 +176,7 @@ export const cancelSubscription = asyncHandler(async (req, res, next) => {
   // Send the response
   res.status(200).json({
     success: true,
-    message: 'Subscription canceled successfully',
+    message: "Subscription canceled successfully",
   });
 });
 
@@ -181,7 +188,7 @@ export const cancelSubscription = asyncHandler(async (req, res, next) => {
 export const getRazorpayApiKey = asyncHandler(async (_req, res, _next) => {
   res.status(200).json({
     success: true,
-    message: 'Razorpay API key',
+    message: "Razorpay API key",
     key: process.env.RAZORPAY_KEY_ID,
   });
 });
@@ -201,18 +208,18 @@ export const allPayments = asyncHandler(async (req, res, _next) => {
   });
 
   const monthNames = [
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December',
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
   ];
 
   const finalMonths = {
@@ -253,7 +260,7 @@ export const allPayments = asyncHandler(async (req, res, _next) => {
 
   res.status(200).json({
     success: true,
-    message: 'All payments',
+    message: "All payments",
     allPayments,
     finalMonths,
     monthlySalesRecord,

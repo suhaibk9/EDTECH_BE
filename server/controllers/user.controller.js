@@ -1,17 +1,17 @@
+import cloudinary from "cloudinary";
 import crypto from "crypto";
 import fs from "fs/promises";
 
-import cloudinary from "cloudinary";
-
 import asyncHandler from "../middlewares/asyncHandler.middleware.js";
-import AppError from "../utils/appError.js";
 import User from "../models/user.model.js";
+import AppError from "../utils/appError.js";
 import sendEmail from "../utils/sendEmail.js";
 
 const cookieOptions = {
   secure: process.env.NODE_ENV === "production" ? true : false,
   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   httpOnly: true,
+  sameSite: "None",
 };
 
 /**
@@ -157,6 +157,7 @@ export const logoutUser = asyncHandler(async (_req, res, _next) => {
     secure: process.env.NODE_ENV === "production" ? true : false,
     maxAge: 0,
     httpOnly: true,
+    sameSite: "None",
   });
 
   // Sending the response

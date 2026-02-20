@@ -4,7 +4,7 @@ import path from "path";
 
 import asyncHandler from "../middlewares/asyncHandler.middleware.js";
 import Course from "../models/course.model.js";
-import AppError from "../utils/AppError.js";
+import AppError from "../utils/appError.js";
 
 /**
  * @ALL_COURSES

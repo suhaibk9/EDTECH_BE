@@ -6,26 +6,28 @@ import AppError from "../utils/appError.js";
 import asyncHandler from "./asyncHandler.middleware.js";
 
 export const isLoggedIn = asyncHandler(async (req, _res, next) => {
-  // extracting token from the cookies
+  // Check cookie first, then fall back to Authorization header
   const { token } = req.cookies;
+  const bearerToken = req.headers?.authorization?.split(" ")[1];
 
-  // If no token send unauthorized message
-  if (!token) {
+  const activeToken = token || bearerToken;
+
+  // If no token found in either place, send unauthorized
+  if (!activeToken) {
     return next(new AppError("Unauthorized, please login to continue", 401));
   }
 
   // Decoding the token using jwt package verify method
-  const decoded = await jwt.verify(token, process.env.JWT_SECRET);
+  const decoded = await jwt.verify(activeToken, process.env.JWT_SECRET);
 
   // If no decode send the message unauthorized
   if (!decoded) {
     return next(new AppError("Unauthorized, please login to continue", 401));
   }
 
-  // If all good store the id in req object, here we are modifying the request object and adding a custom field user in it
+  // If all good store the id in req object
   req.user = decoded;
 
-  // Do not forget to call the next other wise the flow of execution will not be passed further
   next();
 });
 

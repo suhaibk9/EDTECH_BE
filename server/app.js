@@ -9,6 +9,9 @@ import errorMiddleware from "./middlewares/error.middleware.js";
 
 const app = express();
 
+// Trust Render's reverse proxy (required for HTTPS cookie handling on hosted platforms)
+app.set("trust proxy", 1);
+
 // Middlewares
 // Built-In
 app.use(express.json());
